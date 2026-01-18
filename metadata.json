@@ -1,0 +1,7 @@
+{
+  "name": "NEXUS: The Council",
+  "description": "A distributed decision system powered by 14 of history and modern day's most influential minds. Virtualize their thinking models to solve complex strategic problems.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

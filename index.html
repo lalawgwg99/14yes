@@ -1,0 +1,309 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEXUS: The Council</title>
+    <script>
+        // Polyfill for process.env to avoid "ReferenceError: process is not defined" in browser
+        window.process = window.process || { env: {} };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --paper: #F7F5F0; 
+            --paper-texture: url("https://www.transparenttextures.com/patterns/cream-paper.png");
+            --ink: #1F1F1F; 
+            --ink-secondary: #4A4A4A;
+            --bronze: #8C7853; 
+            --bronze-light: #B5A48B;
+            --border-color: #E6E1D6;
+        }
+        
+        body {
+            font-family: 'Noto Serif TC', 'Cormorant Garamond', serif;
+            background-color: var(--paper);
+            color: var(--ink);
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            background-image: var(--paper-texture);
+        }
+
+        /* Typography Systems */
+        h1, h2, h3, .brand-font {
+            font-family: 'Cinzel', serif;
+            letter-spacing: 0.05em;
+        }
+        
+        .serif-tc {
+            font-family: 'Noto Serif TC', serif;
+        }
+
+        .sans-tc {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+
+        /* Editorial Components */
+        .magazine-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(4px);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.05);
+            transition: all 0.5s ease;
+        }
+        
+        .magazine-input {
+            background: transparent;
+            border-bottom: 2px solid #E0E0E0;
+            border-radius: 0;
+            transition: all 0.3s ease;
+            font-family: 'Noto Serif TC', serif;
+        }
+        .magazine-input:focus {
+            border-bottom-color: var(--bronze);
+            outline: none;
+        }
+        .magazine-input::placeholder {
+            color: #B0B0B0;
+            font-style: italic;
+        }
+
+        .editorial-btn {
+            background: var(--ink);
+            color: var(--paper);
+            font-family: 'Noto Sans TC', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--ink);
+        }
+        .editorial-btn:hover {
+            background: transparent;
+            color: var(--ink);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .editorial-btn:disabled {
+            background: #E0E0E0;
+            border-color: #E0E0E0;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Sketch Style Avatars - Optimized Filters */
+        .sketch-avatar-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+        .sketch-avatar-wrapper::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.2'/%3E%3C/svg%3E");
+            mix-blend-mode: overlay;
+            pointer-events: none;
+            border-radius: 9999px;
+        }
+        
+        .sketch-avatar {
+            filter: grayscale(100%) contrast(1.1) brightness(1.02) sepia(0.2);
+            mix-blend-mode: multiply;
+            transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        
+        .sketch-active .sketch-avatar {
+            transform: scale(1.08);
+            filter: grayscale(0%) contrast(1.0) sepia(0.1);
+        }
+
+        /* Animations */
+        .fade-in-up {
+            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .writing-cursor::after {
+            content: 'I';
+            font-style: italic;
+            animation: blink 1s infinite;
+            color: var(--bronze);
+            margin-left: 2px;
+            font-weight: 300;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* Quantum Entanglement Loader */
+        .quantum-loader {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 40px;
+            transform-style: preserve-3d;
+        }
+
+        .quantum-orbit {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px solid rgba(140, 120, 83, 0.2);
+            transform-style: preserve-3d;
+        }
+
+        .quantum-orbit::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 50%;
+            width: 4px;
+            height: 4px;
+            background: #8C7853;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 6px rgba(140, 120, 83, 0.6);
+        }
+
+        .quantum-orbit:nth-child(1) { animation: q-orbit-1 2s linear infinite; }
+        .quantum-orbit:nth-child(2) { animation: q-orbit-2 2s linear infinite; }
+        .quantum-orbit:nth-child(3) { animation: q-orbit-3 2s linear infinite; }
+
+        .quantum-core {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: #1A1A1A;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(26, 26, 26, 0.2);
+            animation: q-pulse 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes q-orbit-1 {
+            0% { transform: rotateZ(0deg) rotateX(65deg); }
+            100% { transform: rotateZ(360deg) rotateX(65deg); }
+        }
+
+        @keyframes q-orbit-2 {
+            0% { transform: rotateZ(120deg) rotateX(65deg); }
+            100% { transform: rotateZ(480deg) rotateX(65deg); }
+        }
+
+        @keyframes q-orbit-3 {
+            0% { transform: rotateZ(240deg) rotateX(65deg); }
+            100% { transform: rotateZ(600deg) rotateX(65deg); }
+        }
+
+        @keyframes q-pulse {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; }
+            100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        }
+
+        /* Marquee Animations */
+        @keyframes marquee-left {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        @keyframes marquee-right {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
+        }
+        .animate-marquee-left {
+            animation: marquee-left 40s linear infinite;
+        }
+        .animate-marquee-right {
+            animation: marquee-right 40s linear infinite;
+        }
+        /* Pause on hover for interaction */
+        .pause-hover:hover .animate-marquee-left,
+        .pause-hover:hover .animate-marquee-right {
+            animation-play-state: paused;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #D0D0D0; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--bronze); }
+        
+        ::selection {
+            background: rgba(140, 120, 83, 0.2);
+            color: var(--ink);
+        }
+
+        .drop-cap::first-letter {
+            font-size: 3.5rem;
+            float: left;
+            line-height: 0.8;
+            margin-right: 0.15em;
+            margin-top: 0.1em;
+            font-family: 'Cinzel', serif;
+            color: var(--ink);
+            font-weight: 700;
+        }
+
+        .radar-chart-container polygon {
+            vector-effect: non-scaling-stroke;
+        }
+        
+        .message-line {
+            position: relative;
+        }
+        .message-line::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 24px;
+            width: 1px;
+            background: rgba(0,0,0,0.05);
+            z-index: 0;
+        }
+        
+        .torn-paper {
+            position: relative;
+        }
+        .torn-paper::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(135deg, transparent 33%, var(--paper) 33%, var(--paper) 66%, transparent 66%) left bottom;
+            background-size: 16px 8px;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
+</body>
+</html>
