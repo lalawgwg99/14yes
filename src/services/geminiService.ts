@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { AGENTS } from "../constants";
-import { Language } from "../types";
+import { AGENTS } from "../lib/constants";
+import { Language } from "../lib/types";
 
 // Robust API Key Retrieval
 const getApiKey = (): string | undefined => {
