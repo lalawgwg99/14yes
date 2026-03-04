@@ -1,6 +1,6 @@
 import { useReducer, useEffect, useState } from 'react';
-import { AppState, Language, Agent, UserTier } from '../lib/types';
-import { generateCouncilResponse } from '../services/geminiService';
+import { AppState, Language, Agent, UserTier, AnalysisMode, StockQuote } from '../lib/types';
+import { generateCouncilResponse, generateStockAnalysis } from '../services/geminiService';
 import { sanitizeInput } from '../lib/sanitizer';
 import { playClick } from './useSound';
 import { saveToHistory } from './useHistory';
@@ -22,6 +22,9 @@ type Action =
   | { type: 'SHOW_PAYWALL'; payload: boolean }
   | { type: 'SET_TIER'; payload: UserTier }
   | { type: 'SKIP_DEBATE' }
+  | { type: 'SET_ANALYSIS_MODE'; payload: AnalysisMode }
+  | { type: 'SET_SELECTED_SYMBOL'; payload: string | null }
+  | { type: 'SET_STOCK_QUOTE'; payload: StockQuote | null }
   | { type: 'RESET' };
 
 function getSavedLang(): 'zh-TW' | 'en' {
@@ -47,6 +50,9 @@ const initialState: AppState = {
   selectedPathId: null,
   userTier: 'COMMANDER',
   showPaywall: false,
+  analysisMode: 'stock',
+  selectedSymbol: null,
+  stockQuote: null,
 };
 
 function reducer(state: AppState, action: Action): AppState {
@@ -91,6 +97,12 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, userTier: action.payload, showPaywall: false };
     case 'SKIP_DEBATE':
       return { ...state, currentSpeakerIndex: state.messages.length - 1 };
+    case 'SET_ANALYSIS_MODE':
+      return { ...state, analysisMode: action.payload };
+    case 'SET_SELECTED_SYMBOL':
+      return { ...state, selectedSymbol: action.payload };
+    case 'SET_STOCK_QUOTE':
+      return { ...state, stockQuote: action.payload };
     case 'RESET':
       return {
         ...state,
@@ -101,6 +113,8 @@ function reducer(state: AppState, action: Action): AppState {
         loading: false,
         currentSpeakerIndex: -1,
         selectedPathId: null,
+        selectedSymbol: null,
+        stockQuote: null,
       };
     default:
       return state;
@@ -145,6 +159,30 @@ export function useCouncil() {
 
   const handleStart = async (isFollowUp = false) => {
     playClick();
+
+    if (state.analysisMode === 'stock' && state.stockQuote && !isFollowUp) {
+      // Stock analysis mode
+      dispatch({ type: 'SET_LOADING', payload: true });
+      setErrorState(null);
+      try {
+        const result = await generateStockAnalysis(
+          state.stockQuote.symbol,
+          state.stockQuote,
+          state.language,
+          state.isDarkMode,
+          state.context || undefined,
+        );
+        dispatch({ type: 'SET_RESULT', payload: { messages: result.debate, verdict: result.verdict } });
+        saveToHistory(`${state.stockQuote.symbol} - ${state.stockQuote.name}`, result.verdict, state.language);
+      } catch (err: any) {
+        console.error(err);
+        dispatch({ type: 'SET_LOADING', payload: false });
+        setErrorState(err.message || "Unknown error occurred.");
+      }
+      return;
+    }
+
+    // Free question mode or follow-up
     const rawQuery = isFollowUp ? state.followUpInput : (state.input || selectedCategory);
     if (!rawQuery) return;
 
@@ -163,7 +201,6 @@ export function useCouncil() {
         isFollowUp ? state.finalVerdict : undefined
       );
       dispatch({ type: 'SET_RESULT', payload: { messages: result.debate, verdict: result.verdict } });
-      // Save to history
       saveToHistory(query, result.verdict, state.language);
     } catch (err: any) {
       console.error(err);

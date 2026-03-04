@@ -31,9 +31,11 @@ export interface Agent {
   experienceEn: string;
   avatar: string;
   color: string;
-  characterPrompt: string; 
-  isPremium: boolean; 
+  characterPrompt: string;
+  isPremium: boolean;
   profile: CognitiveProfile; // Simulation Engine Data
+  financeRole: string;    // Finance analysis role (English)
+  financeRoleZh: string;  // Finance analysis role (Chinese)
 }
 
 export interface DebateMessage {
@@ -43,22 +45,22 @@ export interface DebateMessage {
 }
 
 export interface StrategicMetrics {
-  innovation: number; 
-  risk: number;      
-  speed: number;     
-  capital: number;   
+  innovation: number;
+  risk: number;
+  speed: number;
+  capital: number;
   resilience: number;
 }
 
 export interface StrategicPath {
   id: 'aggressive' | 'conservative' | 'lateral';
-  title: string; 
-  leadAgentId: string; 
-  description: string; 
+  title: string;
+  leadAgentId: string;
+  description: string;
   riskLevel: 'EXTREME' | 'MODERATE' | 'LOW';
-  upside: string; 
-  metrics: StrategicMetrics; 
-  steps: string[]; 
+  upside: string;
+  metrics: StrategicMetrics;
+  steps: string[];
   code: {
     author: string;
     text: string;
@@ -87,19 +89,103 @@ export type Language = 'zh-TW' | 'en';
 
 export type UserTier = 'OBSERVER' | 'COMMANDER';
 
+// --- Stock & Finance Types ---
+
+export interface StockQuote {
+  symbol: string;
+  name: string;
+  currency: string;
+  price: number;
+  previousClose: number;
+  change: number;
+  changePercent: number;
+  volume: number;
+  dayHigh: number;
+  dayLow: number;
+  fiftyTwoWeekHigh?: number;
+  fiftyTwoWeekLow?: number;
+  marketTime?: number;
+  exchangeName?: string;
+}
+
+export interface StockCandle {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export interface StockHistory {
+  symbol: string;
+  currency: string;
+  range: string;
+  candles: StockCandle[];
+}
+
+export interface StockSearchResult {
+  symbol: string;
+  name: string;
+  type: string;
+  exchange: string;
+  exchangeDisplay: string;
+}
+
+export type StockSignal = 'STRONG_BUY' | 'BUY' | 'HOLD' | 'SELL' | 'STRONG_SELL';
+
+export interface StockTargetPrice {
+  low: number;
+  mid: number;
+  high: number;
+}
+
+export interface StockKeyMetrics {
+  pe?: number;
+  pb?: number;
+  roe?: number;
+  debtRatio?: number;
+  dividendYield?: number;
+}
+
+export interface StockVerdict extends Verdict {
+  signal?: StockSignal;
+  targetPrice?: StockTargetPrice;
+  keyMetrics?: StockKeyMetrics;
+}
+
+export interface Position {
+  symbol: string;
+  name: string;
+  shares: number;
+  avgCost: number;
+}
+
+export interface Portfolio {
+  positions: Position[];
+  cash: number;
+  currency: 'TWD' | 'USD';
+}
+
+export type AnalysisMode = 'stock' | 'free';
+
 export interface AppState {
   step: 'confessional' | 'debate' | 'verdict';
   input: string;
-  context: string; 
+  context: string;
   language: Language;
-  isDarkMode: boolean; 
+  isDarkMode: boolean;
   messages: DebateMessage[];
   finalVerdict: Verdict | null;
   loading: boolean;
-  currentSpeakerIndex: number; 
+  currentSpeakerIndex: number;
   followUpInput: string;
-  completedSteps: number[]; 
-  selectedPathId: string | null; 
-  userTier: UserTier; 
-  showPaywall: boolean; 
+  completedSteps: number[];
+  selectedPathId: string | null;
+  userTier: UserTier;
+  showPaywall: boolean;
+  // Stock analysis
+  analysisMode: AnalysisMode;
+  selectedSymbol: string | null;
+  stockQuote: StockQuote | null;
 }
