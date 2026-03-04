@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { createChart, IChartApi, ISeriesApi, CandlestickData, HistogramData, Time } from 'lightweight-charts';
+import React, { useEffect, useRef } from 'react';
+import { createChart, CandlestickSeries, LineSeries, HistogramSeries, IChartApi, CandlestickData, HistogramData, Time } from 'lightweight-charts';
 import { StockHistory, Language } from '../../lib/types';
 import { UI_STRINGS } from '../../lib/constants';
 
@@ -33,7 +33,6 @@ export const StockChart: React.FC<Props> = ({ history, loading, lang, onRangeCha
   useEffect(() => {
     if (!chartRef.current || !history || history.candles.length === 0) return;
 
-    // Clean up previous chart
     if (chartInstance.current) {
       chartInstance.current.remove();
       chartInstance.current = null;
@@ -78,7 +77,8 @@ export const StockChart: React.FC<Props> = ({ history, loading, lang, onRangeCha
         close: c.close,
       }));
 
-    const candleSeries = chart.addCandlestickSeries({
+    // Candlestick series (v5 API: addSeries)
+    const candleSeries = chart.addSeries(CandlestickSeries, {
       upColor: '#ef4444',
       downColor: '#22c55e',
       borderDownColor: '#22c55e',
@@ -88,7 +88,7 @@ export const StockChart: React.FC<Props> = ({ history, loading, lang, onRangeCha
     });
     candleSeries.setData(candleData);
 
-    // Volume — use same deduped+sorted candles
+    // Volume
     const sortedCandles = history.candles
       .filter((c, i, arr) => i === 0 || c.time !== arr[i - 1].time)
       .sort((a, b) => a.time - b.time);
@@ -98,7 +98,7 @@ export const StockChart: React.FC<Props> = ({ history, loading, lang, onRangeCha
       color: c.close >= c.open ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)',
     }));
 
-    const volumeSeries = chart.addHistogramSeries({
+    const volumeSeries = chart.addSeries(HistogramSeries, {
       priceFormat: { type: 'volume' },
       priceScaleId: 'volume',
     });
@@ -110,17 +110,17 @@ export const StockChart: React.FC<Props> = ({ history, loading, lang, onRangeCha
     // Moving Averages
     if (candleData.length >= 5) {
       const ma5 = computeMA(candleData, 5);
-      const ma5Series = chart.addLineSeries({ color: '#f59e0b', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+      const ma5Series = chart.addSeries(LineSeries, { color: '#f59e0b', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
       ma5Series.setData(ma5);
     }
     if (candleData.length >= 20) {
       const ma20 = computeMA(candleData, 20);
-      const ma20Series = chart.addLineSeries({ color: '#3b82f6', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+      const ma20Series = chart.addSeries(LineSeries, { color: '#3b82f6', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
       ma20Series.setData(ma20);
     }
     if (candleData.length >= 60) {
       const ma60 = computeMA(candleData, 60);
-      const ma60Series = chart.addLineSeries({ color: '#8b5cf6', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+      const ma60Series = chart.addSeries(LineSeries, { color: '#8b5cf6', lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
       ma60Series.setData(ma60);
     }
 
@@ -142,7 +142,6 @@ export const StockChart: React.FC<Props> = ({ history, loading, lang, onRangeCha
 
   return (
     <div className="space-y-3">
-      {/* Range selector */}
       <div className="flex items-center gap-2">
         <span className="text-xs font-bold uppercase tracking-widest text-gray-500">{t.timeRange}</span>
         <div className="flex gap-1">
@@ -156,7 +155,6 @@ export const StockChart: React.FC<Props> = ({ history, loading, lang, onRangeCha
             </button>
           ))}
         </div>
-        {/* MA legend */}
         <div className="flex gap-3 ml-auto text-[10px] font-bold">
           <span className="text-amber-500">MA5</span>
           <span className="text-blue-500">MA20</span>
@@ -164,7 +162,6 @@ export const StockChart: React.FC<Props> = ({ history, loading, lang, onRangeCha
         </div>
       </div>
 
-      {/* Chart */}
       <div className="border border-gray-200 bg-[#FAFAF8] rounded overflow-hidden relative">
         {loading && (
           <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
