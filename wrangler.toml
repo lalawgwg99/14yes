@@ -2,11 +2,11 @@ name = "nexus-finance"
 compatibility_date = "2024-01-01"
 pages_build_output_dir = "dist"
 
-# D1 Database
-[[d1_databases]]
-binding = "DB"
-database_name = "nexus-finance-db"
-database_id = "YOUR_D1_DATABASE_ID"
+# D1 Database — uncomment after creating with: wrangler d1 create nexus-finance-db
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "nexus-finance-db"
+# database_id = ""
 
 # Environment variables (set via Cloudflare dashboard or wrangler secret)
 # API_KEY - Gemini API Key
