@@ -1,5 +1,6 @@
 import React from 'react';
 import { Language } from '../../lib/types';
+import { UI_STRINGS } from '../../lib/constants';
 import { HistoryEntry, clearHistory } from '../../hooks/useHistory';
 
 interface Props {
@@ -10,10 +11,11 @@ interface Props {
 }
 
 export const HistoryPanel: React.FC<Props> = ({ entries, lang, onSelect, onRefresh }) => {
+  const t = UI_STRINGS[lang];
   if (entries.length === 0) return null;
 
   const handleClear = () => {
-    if (window.confirm(lang === 'zh-TW' ? '確定要清除所有歷史紀錄？' : 'Clear all history?')) {
+    if (window.confirm(t.clearHistoryConfirm)) {
       clearHistory();
       onRefresh();
     }
@@ -23,10 +25,10 @@ export const HistoryPanel: React.FC<Props> = ({ entries, lang, onSelect, onRefre
     <div className="magazine-card p-8 max-w-3xl mx-auto torn-paper">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xs font-bold uppercase tracking-[0.25em] text-gray-500 sans-tc">
-          {lang === 'zh-TW' ? '歷史諮詢紀錄' : 'Consultation History'}
+          {t.historyTitle}
         </h3>
         <button onClick={handleClear} className="text-[10px] uppercase tracking-widest text-gray-400 hover:text-red-600 transition-colors sans-tc font-bold">
-          {lang === 'zh-TW' ? '清除' : 'Clear'}
+          {t.clearHistory}
         </button>
       </div>
       <div className="space-y-3">
@@ -37,7 +39,7 @@ export const HistoryPanel: React.FC<Props> = ({ entries, lang, onSelect, onRefre
             className="flex items-center justify-between p-4 border border-gray-100 hover:border-bronze/30 cursor-pointer transition-colors group bg-white/50"
           >
             <div className="flex-1 min-w-0">
-              <p className="serif-tc text-sm text-ink truncate group-hover:text-bronze transition-colors">{entry.query}</p>
+              <p className="serif-tc text-sm text-ink truncate group-hover:text-bronze transition-colors" title={entry.query}>{entry.query}</p>
               <p className="text-[10px] text-gray-400 mt-1 sans-tc">
                 {new Date(entry.timestamp).toLocaleDateString(lang === 'zh-TW' ? 'zh-TW' : 'en-US')}
               </p>

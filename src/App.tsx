@@ -38,6 +38,19 @@ const App: React.FC = () => {
     if (state.step === 'confessional') setHistory(getHistory());
   }, [state.step]);
 
+  // Global Escape key to close modals
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (viewingAgent) setViewingAgent(null);
+        else if (state.showPaywall) dispatch({ type: 'SHOW_PAYWALL', payload: false });
+        else if (errorState) setErrorState(null);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [viewingAgent, state.showPaywall, errorState]);
+
   return (
     <div className="min-h-screen w-full selection:bg-[#F2E8DA] selection:text-black flex flex-col">
       {/* Modals */}

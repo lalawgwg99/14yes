@@ -398,7 +398,65 @@ export const UI_STRINGS = {
     member: '會員',
     readFullStrategy: '閱讀完整戰略',
     disclaimer: '免責聲明：本服務由人工智慧驅動，模擬歷史與當代人物的思維模式。所有回應皆為演算法生成，不代表真實人物之言論、立場或背書。內容僅供娛樂與教育參考，不構成專業財務或法律建議。',
-    copyright: '© 2024 NEXUS AI. 虛擬思維模型模擬系統。'
+    copyright: '© 2025 NEXUS AI. 虛擬思維模型模擬系統。',
+    // Hero
+    heroLine1: '在混亂中尋找',
+    heroLine2: '永恆的智慧',
+    heroDesc: '十四位歷史傳奇人物，為您的人生難題提供戰略諮詢。',
+    // Context & Privacy
+    contextLabel: '背景補充（選填）',
+    contextPlaceholder: '例如：公司規模、產業、預算、時間限制...',
+    privacyMode: '隱私模式',
+    privacyDetected: '偵測到敏感資訊（送出前將自動遮蔽）：',
+    privacyDisclaimer: '您的輸入將傳送至 Google Gemini API 進行分析。請勿輸入高度機密資訊。',
+    // Debate controls
+    skipDebate: '⏭ 跳過辯論',
+    // Verdict & Matrix
+    confidenceHigh: '高信心',
+    confidenceMedium: '中信心',
+    confidenceLow: '低信心',
+    copied: '✓ 已複製',
+    shareReport: '↗ 分享報告',
+    printPDF: '🖨 列印 PDF',
+    matrixTitle: '戰略衝突矩陣',
+    dimensionHeader: '決策維度',
+    pathAggressive: '激進路徑',
+    pathConservative: '保守路徑',
+    pathLateral: '側翼路徑',
+    pathAggShort: '激進',
+    pathConShort: '保守',
+    pathLatShort: '側翼',
+    ledBy: '主筆顧問：',
+    // Path Detail
+    algorithm: '思維模型演算法',
+    tacticalAnalysis: '戰術雷達分析',
+    classifiedData: '機密資料',
+    followUpLabel: '追問',
+    followUpPlaceholder: '針對此路徑提出追問...',
+    // Radar labels
+    radarInnovation: '創新',
+    radarRisk: '風險',
+    radarSpeed: '速度',
+    radarCapital: '資本',
+    radarResilience: '韌性',
+    // Agent Detail
+    bioSourceLabel: '傳記資料來源',
+    oceanModelLabel: '五大性格特質 (OCEAN)',
+    system1Label: '直覺思維 (System 1)',
+    system2Label: '邏輯思維 (System 2)',
+    // History
+    historyTitle: '歷史諮詢紀錄',
+    clearHistory: '清除',
+    clearHistoryConfirm: '確定要清除所有歷史紀錄？',
+    // Error
+    errorTitle: '系統中斷',
+    errorSuggest: '建議：檢查 Cloudflare 設定中的 API Key。',
+    errorReconnect: '重新連線',
+    errorBoundaryTitle: '系統發生異常',
+    errorBoundaryDesc: '發生了非預期的錯誤。',
+    errorReload: '重新載入',
+    // TypewriterText
+    skip: 'Skip ▸',
   },
   'en': {
     title: 'The Council',
@@ -444,6 +502,64 @@ export const UI_STRINGS = {
     member: 'Member',
     readFullStrategy: 'Read Strategy',
     disclaimer: 'DISCLAIMER: This service is powered by AI to simulate the thinking models of historical and contemporary figures. All responses are algorithmically generated and do not represent the actual words, views, or endorsements of real individuals. For entertainment and educational purposes only.',
-    copyright: '© 2024 NEXUS AI. Virtual Cognitive Simulation System.'
+    copyright: '© 2025 NEXUS AI. Virtual Cognitive Simulation System.',
+    // Hero
+    heroLine1: 'Find Clarity in',
+    heroLine2: 'Eternal Wisdom',
+    heroDesc: 'Fourteen legendary figures ready to strategize your next move.',
+    // Context & Privacy
+    contextLabel: 'Additional Context (Optional)',
+    contextPlaceholder: 'e.g. Company size, industry, budget, timeline...',
+    privacyMode: 'Privacy Mode',
+    privacyDetected: 'Sensitive info detected (will be redacted):',
+    privacyDisclaimer: 'Your input is sent to Google Gemini API for analysis. Do not enter highly confidential data.',
+    // Debate controls
+    skipDebate: '⏭ Skip Debate',
+    // Verdict & Matrix
+    confidenceHigh: 'HIGH',
+    confidenceMedium: 'MEDIUM',
+    confidenceLow: 'LOW',
+    copied: '✓ Copied',
+    shareReport: '↗ Share',
+    printPDF: '🖨 Print PDF',
+    matrixTitle: 'Strategic Conflict Matrix',
+    dimensionHeader: 'DIMENSION',
+    pathAggressive: 'Aggressive',
+    pathConservative: 'Conservative',
+    pathLateral: 'Lateral',
+    pathAggShort: 'AGG',
+    pathConShort: 'CON',
+    pathLatShort: 'LAT',
+    ledBy: 'Led by ',
+    // Path Detail
+    algorithm: 'Algorithm',
+    tacticalAnalysis: 'Tactical Analysis',
+    classifiedData: 'Classified Data',
+    followUpLabel: 'Ask',
+    followUpPlaceholder: 'Ask a follow-up about this path...',
+    // Radar labels
+    radarInnovation: 'Innov',
+    radarRisk: 'Risk',
+    radarSpeed: 'Speed',
+    radarCapital: 'Cap',
+    radarResilience: 'Resil',
+    // Agent Detail
+    bioSourceLabel: 'Biography Source',
+    oceanModelLabel: "Kosinski's OCEAN Model",
+    system1Label: 'Intuition (Sys 1)',
+    system2Label: 'Logic (Sys 2)',
+    // History
+    historyTitle: 'Consultation History',
+    clearHistory: 'Clear',
+    clearHistoryConfirm: 'Clear all history?',
+    // Error
+    errorTitle: 'System Interruption',
+    errorSuggest: 'Suggest: Check API Key in Cloudflare settings.',
+    errorReconnect: 'Reconnect',
+    errorBoundaryTitle: 'Something went wrong',
+    errorBoundaryDesc: 'An unexpected error occurred.',
+    errorReload: 'Reload',
+    // TypewriterText
+    skip: 'Skip ▸',
   }
 };

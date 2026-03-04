@@ -52,7 +52,7 @@ export const DebateView: React.FC<Props> = ({ messages, currentSpeakerIndex, lan
             onClick={() => { playClick(); onSkipAll(); }}
             className="text-xs uppercase tracking-widest font-bold text-gray-400 hover:text-bronze sans-tc transition-colors border border-gray-200 hover:border-bronze px-6 py-2"
           >
-            {lang === 'zh-TW' ? '⏭ 跳過辯論' : '⏭ Skip Debate'}
+            {t.skipDebate}
           </button>
         </div>
       )}

@@ -24,11 +24,19 @@ type Action =
   | { type: 'SKIP_DEBATE' }
   | { type: 'RESET' };
 
+function getSavedLang(): 'zh-TW' | 'en' {
+  try {
+    const saved = localStorage.getItem('nexus-lang');
+    if (saved === 'en' || saved === 'zh-TW') return saved;
+  } catch {}
+  return 'zh-TW';
+}
+
 const initialState: AppState = {
   step: 'confessional',
   input: '',
   context: '',
-  language: 'zh-TW',
+  language: getSavedLang(),
   isDarkMode: false,
   messages: [],
   finalVerdict: null,
@@ -110,6 +118,16 @@ export function useCouncil() {
   useEffect(() => {
     document.body.classList.toggle('dark-mode', state.isDarkMode);
   }, [state.isDarkMode]);
+
+  // Persist language preference
+  useEffect(() => {
+    try { localStorage.setItem('nexus-lang', state.language); } catch {}
+  }, [state.language]);
+
+  // Scroll to top on step change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [state.step]);
 
   // Auto-advance debate speakers
   useEffect(() => {

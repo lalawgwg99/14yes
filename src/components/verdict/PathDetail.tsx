@@ -55,7 +55,7 @@ export const PathDetail: React.FC<Props> = ({ path, lang, userTier, followUpInpu
           <div className="bg-paper p-10 border border-border torn-paper relative">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 border border-border">
               <h4 className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-500 sans-tc">
-                {lang === 'zh-TW' ? '思維模型演算法' : 'Algorithm'}
+                {t.algorithm}
               </h4>
             </div>
             <p className="font-mono text-xs leading-relaxed text-gray-700 whitespace-pre-wrap">{path.code.text}</p>
@@ -65,7 +65,7 @@ export const PathDetail: React.FC<Props> = ({ path, lang, userTier, followUpInpu
         <div className="md:col-span-5 space-y-12">
           <div onClick={() => { if (userTier === 'OBSERVER') onShowPaywall(); }} className="cursor-pointer group">
             <h4 className="text-xs font-bold uppercase tracking-[0.25em] text-gray-500 mb-8 border-b border-gray-200 pb-3 sans-tc">
-              {lang === 'zh-TW' ? '戰術雷達分析' : 'Tactical Analysis'}
+              {t.tacticalAnalysis}
             </h4>
             <div className="bg-white border border-gray-100 p-8 flex justify-center group-hover:shadow-lg transition-all duration-500">
               <TechnicalRadar metrics={path.metrics} color={color} userTier={userTier} lang={lang} />
@@ -78,14 +78,14 @@ export const PathDetail: React.FC<Props> = ({ path, lang, userTier, followUpInpu
           <div className="pt-8 border-t border-gray-100 space-y-6">
             <div>
               <label className="block text-xs font-bold uppercase tracking-[0.25em] text-gray-500 mb-3 sans-tc">
-                {lang === 'zh-TW' ? `追問 ${displayName}` : `Ask ${displayName}`}
+                {t.followUpLabel} {displayName}
               </label>
               <div className="flex gap-3">
                 <input
                   type="text"
                   value={followUpInput}
                   onChange={e => onFollowUpChange(e.target.value)}
-                  placeholder={lang === 'zh-TW' ? '針對此路徑提出追問...' : 'Ask a follow-up about this path...'}
+                  placeholder={t.followUpPlaceholder}
                   className="flex-grow bg-transparent border-b border-gray-200 focus:border-bronze serif-tc text-base p-2 transition-colors outline-none"
                   onKeyDown={e => { if (e.key === 'Enter' && followUpInput.trim()) { playClick(); onFollowUpSubmit(); } }}
                 />
@@ -94,7 +94,7 @@ export const PathDetail: React.FC<Props> = ({ path, lang, userTier, followUpInpu
                   disabled={!followUpInput.trim()}
                   className="editorial-btn px-6 py-2 text-xs font-bold tracking-widest disabled:opacity-50"
                 >
-                  {lang === 'zh-TW' ? '追問' : 'Ask'}
+                  {t.followUpLabel}
                 </button>
               </div>
             </div>

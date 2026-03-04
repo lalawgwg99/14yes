@@ -1,5 +1,6 @@
 import React from 'react';
 import { StrategicMetrics, Language, UserTier } from '../../lib/types';
+import { UI_STRINGS } from '../../lib/constants';
 
 interface Props {
   metrics: StrategicMetrics;
@@ -9,13 +10,15 @@ interface Props {
 }
 
 export const TechnicalRadar: React.FC<Props> = ({ metrics, color, userTier, lang }) => {
+  const t = UI_STRINGS[lang];
+
   if (userTier === 'OBSERVER') {
     return (
       <div className="relative w-[240px] h-[240px] flex items-center justify-center border border-dashed border-gray-300 rounded-full bg-gray-50/50">
         <div className="text-center z-10">
           <span className="text-3xl mb-3 block opacity-30">🔒</span>
           <p className="text-xs font-bold uppercase tracking-widest text-gray-500">
-            {lang === 'zh-TW' ? '機密資料' : 'Classified Data'}
+            {t.classifiedData}
           </p>
         </div>
       </div>
@@ -25,16 +28,13 @@ export const TechnicalRadar: React.FC<Props> = ({ metrics, color, userTier, lang
   const size = 200;
   const center = size / 2;
   const radius = (size / 2) - 30;
-  const labels = lang === 'zh-TW'
-    ? { inn: '創新', rsk: '風險', spd: '速度', cap: '資本', res: '韌性' }
-    : { inn: 'Innov', rsk: 'Risk', spd: 'Speed', cap: 'Cap', res: 'Resil' };
 
   const data = [
-    { key: labels.inn, value: metrics.innovation },
-    { key: labels.rsk, value: metrics.risk },
-    { key: labels.spd, value: metrics.speed },
-    { key: labels.cap, value: metrics.capital },
-    { key: labels.res, value: metrics.resilience },
+    { key: t.radarInnovation, value: metrics.innovation },
+    { key: t.radarRisk, value: metrics.risk },
+    { key: t.radarSpeed, value: metrics.speed },
+    { key: t.radarCapital, value: metrics.capital },
+    { key: t.radarResilience, value: metrics.resilience },
   ];
 
   const angleSlice = (Math.PI * 2) / 5;

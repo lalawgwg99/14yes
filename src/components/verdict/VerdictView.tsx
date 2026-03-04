@@ -83,9 +83,8 @@ export const VerdictView: React.FC<Props> = ({
                 verdict.confidenceLevel === 'MEDIUM' ? 'text-yellow-700 border-yellow-300 bg-yellow-50' :
                 'text-red-700 border-red-300 bg-red-50'
               }`}>
-                {lang === 'zh-TW'
-                  ? (verdict.confidenceLevel === 'HIGH' ? '高信心' : verdict.confidenceLevel === 'MEDIUM' ? '中信心' : '低信心')
-                  : verdict.confidenceLevel}
+                {verdict.confidenceLevel === 'HIGH' ? t.confidenceHigh :
+                  verdict.confidenceLevel === 'MEDIUM' ? t.confidenceMedium : t.confidenceLow}
               </span>
             )}
           </div>
@@ -106,15 +105,13 @@ export const VerdictView: React.FC<Props> = ({
             onClick={handleShare}
             className="inline-flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-gray-500 hover:text-bronze transition-colors sans-tc border border-gray-300 hover:border-bronze px-4 py-2"
           >
-            {copied
-              ? (lang === 'zh-TW' ? '✓ 已複製' : '✓ Copied')
-              : (lang === 'zh-TW' ? '↗ 分享報告' : '↗ Share')}
+            {copied ? t.copied : t.shareReport}
           </button>
           <button
             onClick={() => window.print()}
             className="inline-flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-gray-500 hover:text-bronze transition-colors sans-tc border border-gray-300 hover:border-bronze px-4 py-2"
           >
-            {lang === 'zh-TW' ? '🖨 列印 PDF' : '🖨 Print PDF'}
+            {t.printPDF}
           </button>
         </div>
       </div>
@@ -123,7 +120,7 @@ export const VerdictView: React.FC<Props> = ({
         <div className="max-w-5xl mx-auto px-4">
           <div className="text-center mb-6">
             <h3 className="text-sm font-bold uppercase tracking-[0.25em] text-gray-500 sans-tc mb-2">
-              {lang === 'zh-TW' ? '戰略衝突矩陣' : 'Strategic Conflict Matrix'}
+              {t.matrixTitle}
             </h3>
             <div className="w-8 h-[1px] bg-bronze mx-auto" />
           </div>

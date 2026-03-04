@@ -1,4 +1,5 @@
 import { Verdict, Language } from '../lib/types';
+import { UI_STRINGS } from '../lib/constants';
 
 export interface HistoryEntry {
   id: string;
@@ -44,10 +45,11 @@ export function clearHistory() {
 }
 
 export function shareVerdict(verdict: Verdict, lang: Language): string {
+  const t = UI_STRINGS[lang];
   const lines = [
     `📋 NEXUS: The Council — ${lang === 'zh-TW' ? '戰略報告' : 'Strategic Report'}`,
     '',
-    `📊 ${lang === 'zh-TW' ? '診斷' : 'Diagnosis'}: ${verdict.diagnosis}`,
+    `📊 ${t.diagnosis}: ${verdict.diagnosis}`,
     '',
     ...verdict.paths.map((p, i) => {
       const icons = ['🔴', '🔵', '🟡'];

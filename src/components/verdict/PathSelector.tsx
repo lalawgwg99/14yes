@@ -37,7 +37,7 @@ export const PathSelector: React.FC<Props> = ({ paths, lang, onSelectPath, onRes
               <div>
                 <h3 className="serif-tc text-3xl font-bold text-ink mb-3 group-hover:text-bronze transition-colors">{path.title}</h3>
                 <p className="text-[10px] uppercase tracking-widest text-gray-500 sans-tc font-bold">
-                  {lang === 'zh-TW' ? '主筆顧問：' : 'Led by '}{displayName}
+                  {t.ledBy}{displayName}
                 </p>
               </div>
               <div className="flex justify-center transform group-hover:scale-105 transition-transform duration-500">
