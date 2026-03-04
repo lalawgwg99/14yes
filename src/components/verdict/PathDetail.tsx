@@ -9,6 +9,9 @@ interface Props {
   path: StrategicPath;
   lang: Language;
   userTier: UserTier;
+  followUpInput: string;
+  onFollowUpChange: (value: string) => void;
+  onFollowUpSubmit: () => void;
   onBack: () => void;
   onReset: () => void;
   onShowPaywall: () => void;
@@ -20,7 +23,7 @@ const PATH_COLORS: Record<string, string> = {
   lateral: '#8C7853',
 };
 
-export const PathDetail: React.FC<Props> = ({ path, lang, userTier, onBack, onReset, onShowPaywall }) => {
+export const PathDetail: React.FC<Props> = ({ path, lang, userTier, followUpInput, onFollowUpChange, onFollowUpSubmit, onBack, onReset, onShowPaywall }) => {
   const t = UI_STRINGS[lang];
   const leadAgent = AGENTS.find(a => a.id === path.leadAgentId);
   const displayName = lang === 'zh-TW' ? leadAgent?.nameZh : leadAgent?.name;
@@ -72,13 +75,37 @@ export const PathDetail: React.FC<Props> = ({ path, lang, userTier, onBack, onRe
             <h4 className="text-xs font-bold uppercase tracking-[0.25em] text-gray-500 mb-3 sans-tc">{t.upside}</h4>
             <p className="serif-tc text-2xl italic text-ink leading-relaxed">{path.upside}</p>
           </div>
-          <div className="pt-12 border-t border-gray-100 flex flex-col md:flex-row gap-6 items-center md:items-start justify-center md:justify-start">
-            <button onClick={() => { playClick(); onBack(); }} className="text-xs uppercase tracking-widest font-bold text-gray-500 hover:text-black sans-tc transition-colors border-b border-transparent hover:border-black pb-1">
-              ← {t.backToMatrix}
-            </button>
-            <button onClick={onReset} className="text-xs uppercase tracking-widest font-bold text-gray-400 hover:text-red-800 sans-tc transition-colors border-b border-transparent hover:border-red-800 pb-1">
-              ↺ {t.reset}
-            </button>
+          <div className="pt-8 border-t border-gray-100 space-y-6">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-[0.25em] text-gray-500 mb-3 sans-tc">
+                {lang === 'zh-TW' ? `追問 ${displayName}` : `Ask ${displayName}`}
+              </label>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={followUpInput}
+                  onChange={e => onFollowUpChange(e.target.value)}
+                  placeholder={lang === 'zh-TW' ? '針對此路徑提出追問...' : 'Ask a follow-up about this path...'}
+                  className="flex-grow bg-transparent border-b border-gray-200 focus:border-bronze serif-tc text-base p-2 transition-colors outline-none"
+                  onKeyDown={e => { if (e.key === 'Enter' && followUpInput.trim()) { playClick(); onFollowUpSubmit(); } }}
+                />
+                <button
+                  onClick={() => { if (followUpInput.trim()) { playClick(); onFollowUpSubmit(); } }}
+                  disabled={!followUpInput.trim()}
+                  className="editorial-btn px-6 py-2 text-xs font-bold tracking-widest disabled:opacity-50"
+                >
+                  {lang === 'zh-TW' ? '追問' : 'Ask'}
+                </button>
+              </div>
+            </div>
+            <div className="flex flex-col md:flex-row gap-6 items-center md:items-start justify-center md:justify-start">
+              <button onClick={() => { playClick(); onBack(); }} className="text-xs uppercase tracking-widest font-bold text-gray-500 hover:text-black sans-tc transition-colors border-b border-transparent hover:border-black pb-1">
+                ← {t.backToMatrix}
+              </button>
+              <button onClick={onReset} className="text-xs uppercase tracking-widest font-bold text-gray-400 hover:text-red-800 sans-tc transition-colors border-b border-transparent hover:border-red-800 pb-1">
+                ↺ {t.reset}
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -11,6 +11,9 @@ interface Props {
   lang: Language;
   userTier: UserTier;
   selectedPathId: string | null;
+  followUpInput: string;
+  onFollowUpChange: (value: string) => void;
+  onFollowUpSubmit: () => void;
   onSelectPath: (id: string) => void;
   onClearPath: () => void;
   onReset: () => void;
@@ -18,7 +21,8 @@ interface Props {
 }
 
 export const VerdictView: React.FC<Props> = ({
-  verdict, lang, userTier, selectedPathId,
+  verdict, lang, userTier, selectedPathId, followUpInput,
+  onFollowUpChange, onFollowUpSubmit,
   onSelectPath, onClearPath, onReset, onShowPaywall,
 }) => {
   const t = UI_STRINGS[lang];
@@ -51,6 +55,9 @@ export const VerdictView: React.FC<Props> = ({
         path={path}
         lang={lang}
         userTier={userTier}
+        followUpInput={followUpInput}
+        onFollowUpChange={onFollowUpChange}
+        onFollowUpSubmit={onFollowUpSubmit}
         onBack={onClearPath}
         onReset={onReset}
         onShowPaywall={onShowPaywall}
@@ -66,6 +73,24 @@ export const VerdictView: React.FC<Props> = ({
             {verdict.isDarkVerdict ? t.shadowLabel : t.verdictTitle}
           </span>
         </div>
+        {/* Executive Summary + Confidence */}
+        {verdict.executiveSummary && (
+          <div className="inline-flex items-center gap-4 bg-white/80 border border-border px-6 py-3 shadow-sm">
+            <p className="serif-tc text-lg font-bold text-ink">{verdict.executiveSummary}</p>
+            {verdict.confidenceLevel && (
+              <span className={`text-[10px] uppercase tracking-widest font-bold px-2 py-1 border ${
+                verdict.confidenceLevel === 'HIGH' ? 'text-green-700 border-green-300 bg-green-50' :
+                verdict.confidenceLevel === 'MEDIUM' ? 'text-yellow-700 border-yellow-300 bg-yellow-50' :
+                'text-red-700 border-red-300 bg-red-50'
+              }`}>
+                {lang === 'zh-TW'
+                  ? (verdict.confidenceLevel === 'HIGH' ? '高信心' : verdict.confidenceLevel === 'MEDIUM' ? '中信心' : '低信心')
+                  : verdict.confidenceLevel}
+              </span>
+            )}
+          </div>
+        )}
+
         <h2 className="text-4xl md:text-5xl serif-tc font-medium text-ink leading-tight drop-shadow-sm">
           {verdict.diagnosis}
         </h2>
@@ -74,14 +99,24 @@ export const VerdictView: React.FC<Props> = ({
             {verdict.conflictResolution}
           </p>
         </div>
-        <button
-          onClick={handleShare}
-          className="mt-6 inline-flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-gray-500 hover:text-bronze transition-colors sans-tc border border-gray-300 hover:border-bronze px-4 py-2"
-        >
-          {copied
-            ? (lang === 'zh-TW' ? '✓ 已複製' : '✓ Copied')
-            : (lang === 'zh-TW' ? '↗ 分享戰略報告' : '↗ Share Report')}
-        </button>
+
+        {/* Toolbar: Share + Print */}
+        <div className="flex items-center justify-center gap-4 mt-6 print:hidden">
+          <button
+            onClick={handleShare}
+            className="inline-flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-gray-500 hover:text-bronze transition-colors sans-tc border border-gray-300 hover:border-bronze px-4 py-2"
+          >
+            {copied
+              ? (lang === 'zh-TW' ? '✓ 已複製' : '✓ Copied')
+              : (lang === 'zh-TW' ? '↗ 分享報告' : '↗ Share')}
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-gray-500 hover:text-bronze transition-colors sans-tc border border-gray-300 hover:border-bronze px-4 py-2"
+          >
+            {lang === 'zh-TW' ? '🖨 列印 PDF' : '🖨 Print PDF'}
+          </button>
+        </div>
       </div>
 
       {verdict.matrix && verdict.matrix.length > 0 && (

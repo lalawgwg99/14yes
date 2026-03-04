@@ -37,6 +37,13 @@ export const MessageBubble: React.FC<Props> = ({ msg, agent, index, isNew, lang 
           <div className="relative z-10 serif-tc text-base md:text-lg text-ink leading-loose">
             {isNew ? <TypewriterText content={msg.content} /> : msg.content}
           </div>
+          {msg.citation && (
+            <div className={`mt-3 pt-2 border-t border-gray-100 ${isLeft ? 'text-left' : 'text-right'}`}>
+              <span className="text-[10px] italic text-bronze/70 sans-tc tracking-wide">
+                📖 {msg.citation}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

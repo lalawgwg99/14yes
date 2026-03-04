@@ -90,9 +90,11 @@ const App: React.FC = () => {
                   lang={state.language}
                   userTier={state.userTier}
                   input={state.input}
+                  context={state.context}
                   selectedCategory={selectedCategory}
                   isDarkMode={state.isDarkMode}
                   onInputChange={(v) => dispatch({ type: 'SET_INPUT', payload: v })}
+                  onContextChange={(v) => dispatch({ type: 'SET_CONTEXT', payload: v })}
                   onCategoryChange={setSelectedCategory}
                   onToggleDarkMode={toggleDarkMode}
                   onSubmit={() => handleStart(false)}
@@ -117,6 +119,7 @@ const App: React.FC = () => {
                 currentSpeakerIndex={state.currentSpeakerIndex}
                 lang={state.language}
                 onProceedToVerdict={() => dispatch({ type: 'GO_TO_VERDICT' })}
+                onSkipAll={() => dispatch({ type: 'SKIP_DEBATE' })}
               />
             )}
 
@@ -127,6 +130,9 @@ const App: React.FC = () => {
                 lang={state.language}
                 userTier={state.userTier}
                 selectedPathId={state.selectedPathId}
+                followUpInput={state.followUpInput}
+                onFollowUpChange={(v) => dispatch({ type: 'SET_FOLLOW_UP', payload: v })}
+                onFollowUpSubmit={() => handleStart(true)}
                 onSelectPath={(id) => dispatch({ type: 'SELECT_PATH', payload: id })}
                 onClearPath={() => dispatch({ type: 'CLEAR_PATH' })}
                 onReset={handleReset}

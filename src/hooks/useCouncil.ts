@@ -1,6 +1,7 @@
 import { useReducer, useEffect, useState } from 'react';
 import { AppState, Language, Agent, UserTier } from '../lib/types';
 import { generateCouncilResponse } from '../services/geminiService';
+import { sanitizeInput } from '../lib/sanitizer';
 import { playClick } from './useSound';
 import { saveToHistory } from './useHistory';
 
@@ -20,6 +21,7 @@ type Action =
   | { type: 'CLEAR_PATH' }
   | { type: 'SHOW_PAYWALL'; payload: boolean }
   | { type: 'SET_TIER'; payload: UserTier }
+  | { type: 'SKIP_DEBATE' }
   | { type: 'RESET' };
 
 const initialState: AppState = {
@@ -79,6 +81,8 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, showPaywall: action.payload };
     case 'SET_TIER':
       return { ...state, userTier: action.payload, showPaywall: false };
+    case 'SKIP_DEBATE':
+      return { ...state, currentSpeakerIndex: state.messages.length - 1 };
     case 'RESET':
       return {
         ...state,
@@ -100,6 +104,7 @@ export function useCouncil() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [viewingAgent, setViewingAgent] = useState<Agent | null>(null);
   const [errorState, setErrorState] = useState<string | null>(null);
+  const [privacyMode, setPrivacyMode] = useState(false);
 
   // Dark mode body class
   useEffect(() => {
@@ -122,8 +127,11 @@ export function useCouncil() {
 
   const handleStart = async (isFollowUp = false) => {
     playClick();
-    const query = isFollowUp ? state.followUpInput : (state.input || selectedCategory);
-    if (!query) return;
+    const rawQuery = isFollowUp ? state.followUpInput : (state.input || selectedCategory);
+    if (!rawQuery) return;
+
+    const query = privacyMode ? sanitizeInput(rawQuery) : rawQuery;
+    const ctx = privacyMode ? sanitizeInput(state.context) : state.context;
 
     dispatch({ type: 'SET_LOADING', payload: true });
     setErrorState(null);
@@ -131,7 +139,7 @@ export function useCouncil() {
     try {
       const result = await generateCouncilResponse(
         query,
-        state.context,
+        ctx,
         state.isDarkMode,
         state.language,
         isFollowUp ? state.finalVerdict : undefined
@@ -177,5 +185,7 @@ export function useCouncil() {
     handleStart,
     handleReset,
     toggleDarkMode,
+    privacyMode,
+    setPrivacyMode,
   };
 }

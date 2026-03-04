@@ -9,9 +9,10 @@ interface Props {
   currentSpeakerIndex: number;
   lang: Language;
   onProceedToVerdict: () => void;
+  onSkipAll: () => void;
 }
 
-export const DebateView: React.FC<Props> = ({ messages, currentSpeakerIndex, lang, onProceedToVerdict }) => {
+export const DebateView: React.FC<Props> = ({ messages, currentSpeakerIndex, lang, onProceedToVerdict, onSkipAll }) => {
   const endRef = useRef<HTMLDivElement>(null);
   const t = UI_STRINGS[lang];
 
@@ -44,6 +45,17 @@ export const DebateView: React.FC<Props> = ({ messages, currentSpeakerIndex, lan
         })}
         <div ref={endRef} className="h-12" />
       </div>
+
+      {!allDone && (
+        <div className="flex justify-center pt-6">
+          <button
+            onClick={() => { playClick(); onSkipAll(); }}
+            className="text-xs uppercase tracking-widest font-bold text-gray-400 hover:text-bronze sans-tc transition-colors border border-gray-200 hover:border-bronze px-6 py-2"
+          >
+            {lang === 'zh-TW' ? '⏭ 跳過辯論' : '⏭ Skip Debate'}
+          </button>
+        </div>
+      )}
 
       {allDone && (
         <div className="flex justify-center pt-12 border-t border-gray-100">

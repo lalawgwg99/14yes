@@ -1,25 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Language, UserTier } from '../../lib/types';
 import { UI_STRINGS, CATEGORIES } from '../../lib/constants';
 import { playClick } from '../../hooks/useSound';
+import { detectSensitiveItems } from '../../lib/sanitizer';
 
 interface Props {
   lang: Language;
   userTier: UserTier;
   input: string;
+  context: string;
   selectedCategory: string;
   isDarkMode: boolean;
   onInputChange: (value: string) => void;
+  onContextChange: (value: string) => void;
   onCategoryChange: (cat: string) => void;
   onToggleDarkMode: () => void;
   onSubmit: () => void;
 }
 
 export const InputForm: React.FC<Props> = ({
-  lang, userTier, input, selectedCategory, isDarkMode,
-  onInputChange, onCategoryChange, onToggleDarkMode, onSubmit,
+  lang, userTier, input, context, selectedCategory, isDarkMode,
+  onInputChange, onContextChange, onCategoryChange, onToggleDarkMode, onSubmit,
 }) => {
   const t = UI_STRINGS[lang];
+  const [privacyMode, setPrivacyMode] = useState(false);
+  const sensitiveItems = privacyMode ? detectSensitiveItems(input + ' ' + context) : [];
 
   return (
     <div className="magazine-card p-10 md:p-16 relative max-w-3xl mx-auto torn-paper">
@@ -53,7 +58,28 @@ export const InputForm: React.FC<Props> = ({
           />
         </div>
 
-        <div className="flex items-center justify-between pt-6 border-t border-gray-100">
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-[0.25em] text-gray-500 mb-5 sans-tc">
+            {lang === 'zh-TW' ? '背景補充（選填）' : 'Additional Context (Optional)'}
+          </label>
+          <textarea
+            value={context}
+            onChange={e => onContextChange(e.target.value)}
+            placeholder={lang === 'zh-TW' ? '例如：公司規模、產業、預算、時間限制...' : 'e.g. Company size, industry, budget, timeline...'}
+            className="w-full h-24 bg-transparent border-0 border-b border-gray-200 resize-none serif-tc text-base leading-relaxed focus:ring-0 focus:border-bronze placeholder-gray-400 p-2 transition-colors text-gray-600"
+          />
+        </div>
+
+        {/* Privacy + Dark Mode Row */}
+        <div className="flex flex-wrap items-center gap-6 pt-6 border-t border-gray-100">
+          <button
+            onClick={() => { playClick(); setPrivacyMode(!privacyMode); }}
+            className={`flex items-center gap-3 text-xs font-bold uppercase tracking-widest transition-colors sans-tc ${privacyMode ? 'text-green-700' : 'text-gray-500 hover:text-black'}`}
+          >
+            <span className={`w-3 h-3 rounded-full border ${privacyMode ? 'bg-green-600 border-green-600' : 'border-gray-500'}`} />
+            {lang === 'zh-TW' ? '隱私模式' : 'Privacy Mode'}
+          </button>
+
           <button
             onClick={onToggleDarkMode}
             className={`flex items-center gap-3 text-xs font-bold uppercase tracking-widest transition-colors sans-tc ${isDarkMode ? 'text-[#8C7000]' : 'text-gray-500 hover:text-black'}`}
@@ -63,6 +89,8 @@ export const InputForm: React.FC<Props> = ({
             {userTier === 'OBSERVER' && <span className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded ml-1">LOCKED</span>}
           </button>
 
+          <div className="flex-grow" />
+
           <button
             onClick={onSubmit}
             disabled={!input && !selectedCategory}
@@ -71,6 +99,22 @@ export const InputForm: React.FC<Props> = ({
             {t.startDebate}
           </button>
         </div>
+
+        {/* Privacy warnings */}
+        {privacyMode && sensitiveItems.length > 0 && (
+          <div className="bg-green-50 border border-green-200 p-4 text-xs sans-tc text-green-800 space-y-2">
+            <p className="font-bold">{lang === 'zh-TW' ? '偵測到敏感資訊（送出前將自動遮蔽）：' : 'Sensitive info detected (will be redacted):'}</p>
+            <ul className="list-disc pl-5 space-y-1">
+              {sensitiveItems.slice(0, 8).map((item, i) => <li key={i}>{item}</li>)}
+            </ul>
+          </div>
+        )}
+
+        <p className="text-[10px] text-gray-400 sans-tc text-center">
+          {lang === 'zh-TW'
+            ? '您的輸入將傳送至 Google Gemini API 進行分析。請勿輸入高度機密資訊。'
+            : 'Your input is sent to Google Gemini API for analysis. Do not enter highly confidential data.'}
+        </p>
       </div>
     </div>
   );

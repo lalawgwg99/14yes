@@ -39,6 +39,7 @@ export interface Agent {
 export interface DebateMessage {
   agentId: string;
   content: string;
+  citation?: string;
 }
 
 export interface StrategicMetrics {
@@ -74,9 +75,11 @@ export interface ConflictDimension {
 
 export interface Verdict {
   diagnosis: string;
-  conflictResolution: string; 
-  paths: StrategicPath[]; 
-  matrix: ConflictDimension[]; // NEW: The comparison table data
+  executiveSummary?: string;
+  confidenceLevel?: 'LOW' | 'MEDIUM' | 'HIGH';
+  conflictResolution: string;
+  paths: StrategicPath[];
+  matrix: ConflictDimension[];
   isDarkVerdict: boolean;
 }
 

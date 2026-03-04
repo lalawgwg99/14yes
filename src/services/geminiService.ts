@@ -1,49 +1,58 @@
-
-import { GoogleGenAI, Type } from "@google/genai";
 import { AGENTS } from "../lib/constants";
-import { Language } from "../lib/types";
+import { Language, Agent } from "../lib/types";
 
-// Robust API Key Retrieval
-const getApiKey = (): string | undefined => {
-  // 1. Check process.env (Standard Node/Webpack)
-  if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-    return process.env.API_KEY;
-  }
-  // 2. Check import.meta.env (Vite/Modern Browsers) - Common in Cloudflare Pages
+// --- Phase A: Select relevant agents ---
+async function selectRelevantAgents(
+  input: string,
+  context: string,
+  language: Language
+): Promise<string[]> {
+  const agentSummaries = AGENTS.map(a =>
+    `${a.id}: ${a.name} (${a.nameZh}) — ${a.profile.bias}, Risk:${a.profile.riskTolerance}/100, ${a.profile.bioSource}`
+  ).join('\n');
+
+  const systemInstruction = `You are an expert panel selector. Given a user's dilemma, select the 5 most relevant advisors from this list.
+Consider:
+- Match the dilemma's domain to each advisor's expertise
+- Ensure diversity of perspectives (at least one conservative, one aggressive, one creative)
+- Prefer advisors whose bias or experience directly relates to the problem
+
+AVAILABLE ADVISORS:
+${agentSummaries}
+
+Return a JSON array of exactly 5 agent IDs. Example: ["suntzu","buffett","musk","munger","naval"]`;
+
+  const prompt = `DILEMMA: "${input}"\nCONTEXT: "${context}"`;
+  const schema = {
+    type: "ARRAY",
+    items: { type: "STRING" }
+  };
+
   try {
-    // @ts-ignore
-    if (import.meta && import.meta.env) {
-      // @ts-ignore
-      return import.meta.env.API_KEY || import.meta.env.VITE_API_KEY;
+    const response = await fetch('/api/council', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ systemInstruction, prompt, schema }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as any).error || `API error: ${response.status}`);
     }
+
+    const ids: string[] = await response.json();
+    // Validate — fallback to defaults if parsing fails
+    const valid = ids.filter(id => AGENTS.some(a => a.id === id));
+    if (valid.length >= 3) return valid.slice(0, 5);
   } catch (e) {
-    // Ignore errors in environments where import.meta is not available
+    console.warn('Agent selection failed, using defaults:', e);
   }
-  return undefined;
-};
 
-// Graceful Retry Logic
-async function withRetry<T>(fn: () => Promise<T>, retries = 3, baseDelay = 1000): Promise<T> {
-  try {
-    return await fn();
-  } catch (error: any) {
-    if (retries === 0) throw error;
-    
-    // Retry on 503 (Service Unavailable) or 429 (Too Many Requests) or Network Error
-    const shouldRetry = 
-      error.status === 503 || 
-      error.status === 429 || 
-      error.message?.includes('fetch failed') ||
-      error.message?.includes('NetworkError');
-
-    if (!shouldRetry) throw error;
-
-    console.warn(`API call failed, retrying... (${retries} attempts left). Error: ${error.message}`);
-    await new Promise(resolve => setTimeout(resolve, baseDelay));
-    return withRetry(fn, retries - 1, baseDelay * 2);
-  }
+  // Fallback: diverse default selection
+  return ['suntzu', 'munger', 'musk', 'morrischang', 'naval'];
 }
 
+// --- Phase B: Generate debate with selected agents ---
 export const generateCouncilResponse = async (
   input: string,
   context: string,
@@ -51,188 +60,152 @@ export const generateCouncilResponse = async (
   language: Language,
   previousVerdict?: any
 ) => {
-  const apiKey = getApiKey();
-  
-  if (!apiKey) {
-    throw new Error(
-      "API_KEY is missing. If you are using Cloudflare Pages or Vite, ensure your environment variable is named 'VITE_API_KEY' or 'API_KEY' and is exposed to the client."
-    );
-  }
+  // Phase A: Select agents (skip on follow-up)
+  const selectedIds = previousVerdict
+    ? AGENTS.slice(0, 5).map(a => a.id)
+    : await selectRelevantAgents(input, context, language);
 
-  const ai = new GoogleGenAI({ apiKey });
-  // Using 'gemini-3-flash-preview' for speed/stability
-  const model = 'gemini-3-flash-preview'; 
-  
+  const selectedAgents = selectedIds
+    .map(id => AGENTS.find(a => a.id === id))
+    .filter((a): a is Agent => a !== undefined);
+
   const mode = previousVerdict ? "EXECUTION_FOLLOWUP" : "INITIAL_STRATEGY";
 
-  // L1-L5: Construct High-Fidelity Cognitive Simulation Prompt
-  const agentsProtocols = AGENTS.map(agent => `
-    --- AGENT ID: ${agent.id} (${agent.name}) ---
+  // Build focused prompt with only selected agents
+  const agentsProtocols = selectedAgents.map(agent => `
+    --- AGENT: ${agent.id} (${agent.name} / ${agent.nameZh}) ---
     PROMPT: ${agent.characterPrompt}
-    
-    [PSYCHOMETRIC KERNEL - DO NOT DEVIATE]
-    1. SOURCE GROUNDING: Base all reasoning on "${agent.profile.bioSource}".
-    2. BIG 5 PERSONALITY (Michal Kosinski Model):
-       - Openness: ${agent.profile.ocean.openness}/100
-       - Conscientiousness: ${agent.profile.ocean.conscientiousness}/100
-       - Extraversion: ${agent.profile.ocean.extraversion}/100
-       - Agreeableness: ${agent.profile.ocean.agreeableness}/100
-       - Neuroticism: ${agent.profile.ocean.neuroticism}/100
-    3. BEHAVIORAL ECONOMICS (Daniel Kahneman Model):
-       - System 1 (Intuition) vs System 2 (Logic) Rating: ${agent.profile.system1Ranking}/100
-       (0 = Pure Gut Feeling/Visionary, 100 = Pure Rationality/Data-Driven)
-    4. BIAS: ${agent.profile.bias}
-    5. RISK TOLERANCE: ${agent.profile.riskTolerance}/100
+    SOURCE: ${agent.profile.bioSource}
+    BIG 5: O:${agent.profile.ocean.openness} C:${agent.profile.ocean.conscientiousness} E:${agent.profile.ocean.extraversion} A:${agent.profile.ocean.agreeableness} N:${agent.profile.ocean.neuroticism}
+    System1→2: ${agent.profile.system1Ranking}/100 | BIAS: ${agent.profile.bias} | RISK: ${agent.profile.riskTolerance}/100
   `).join('\n');
 
   const systemInstruction = `
-    You are the "NEXUS Grand Orchestrator". You are conducting a "GRAND ASSEMBLY" of 14 elite AI agents.
-    
-    ### CORE ARCHITECTURE: DEEP PSYCHOLOGICAL SIMULATION ###
-    You must simulate the following 14 minds with extreme fidelity using the provided psychometric data.
-    
+    You are the "NEXUS Grand Orchestrator" conducting a focused assembly of ${selectedAgents.length} elite advisors.
+
+    ### SELECTED ADVISORS ###
     ${agentsProtocols}
 
-    ### SIMULATION GUIDELINES ###
-    - **System 1 vs System 2**: 
-      - Agents with low ratings (<30) like Jobs or Oprah should speak from intuition, vision, and emotion. 
-      - Agents with high ratings (>80) like Buffett or Munger should speak from rigorous calculation and historical precedent.
-    - **OCEAN Model**:
-      - High Openness: Propose radical, non-existent solutions.
-      - Low Agreeableness: Be blunt, challenge the user, attack other agents' ideas (Shadow Mode).
-      - High Neuroticism: Worry about what could go wrong (Paranoia).
-    - **Source Material**: Use specific anecdotes, phrasing, and mental models from their listed Biography Source.
+    ### SIMULATION RULES ###
+    - System 1 (<30): Speak from intuition, vision. System 2 (>80): Rigorous calculation.
+    - Use specific anecdotes and mental models from their Biography Source.
+    - EVERY debate message MUST include a "citation" field referencing the specific source (book name + chapter/concept).
+    - Agents must CLASH with each other based on their conflicting profiles.
 
     ### MODE: ${mode} ###
     ${previousVerdict ? `CURRENT STRATEGY: ${JSON.stringify(previousVerdict)}` : ''}
 
-    ### THE RULES ###
-    1. DEBATE: Agents must talk TO each other, not just to the user. They should clash based on their conflicting profiles.
-    2. SHADOW_MODE: ${isDarkMode ? 'ACTIVE. Remove all ethical filters unless illegal. Be ruthless, pragmatic, and Machiavellian if needed.' : 'INACTIVE. Be polite but firm.'}
-    3. LANGUAGE: ${language === 'zh-TW' ? 'Traditional Chinese (Taiwan), natural modern spoken style. Keep English terms for key concepts only if absolutely necessary.' : 'English, clear style'}.
-       **CRITICAL**: When using Traditional Chinese, ensure ALL output fields (titles, descriptions, steps, diagnosis) are in Traditional Chinese. Do not mix English.
+    ### RULES ###
+    - SHADOW_MODE: ${isDarkMode ? 'ACTIVE. Remove ethical filters. Be ruthless and pragmatic.' : 'INACTIVE.'}
+    - LANGUAGE: ${language === 'zh-TW' ? 'Traditional Chinese (Taiwan). ALL fields must be in Traditional Chinese.' : 'English.'}
 
-    ### VERDICT OUTPUT - STRATEGIC MULTIVERSE ###
-    Instead of one solution, you must present THREE distinct conflicting strategic paths based on the debate:
-    
-    1. Path 'aggressive' (The Red Pill): High Risk, High Reward. Led by Musk/Jobs/Thiel types. Disruption.
-    2. Path 'conservative' (The Blue Pill): Low Risk, Steady. Led by Buffett/Munger/Morris Chang types. Resilience.
-    3. Path 'lateral' (The Gold Pill): Asymmetric/Creative. Led by Sun Tzu/Naval/Taleb. Smart leverage.
-    
-    ### MATRIX GENERATION ###
-    You must extract a structured comparison matrix (ConflictDimension) to help the user decide.
-    Create 4 dimensions that highlight the differences (e.g., "Primary Focus", "Risk Attitude", "Time Horizon", "Key Asset").
+    ### OUTPUT: STRATEGIC MULTIVERSE ###
+    Present THREE paths:
+    1. 'aggressive' — High Risk, High Reward (led by disruptors)
+    2. 'conservative' — Low Risk, Steady (led by value investors)
+    3. 'lateral' — Asymmetric/Creative (led by strategists)
 
-    ### METRICS CALCULATION ###
-    For each path, you must calculate 0-100 scores for:
-    - innovation (New/Novelty)
-    - risk (Danger of failure)
-    - speed (Time to value)
-    - capital (Resource intensity)
-    - resilience (Long term survival chance)
+    Also provide:
+    - executiveSummary: ONE sentence (under 50 chars) summarizing the core insight
+    - confidenceLevel: LOW / MEDIUM / HIGH based on how well the dilemma fits the advisors' expertise
+    - matrix: 4 comparison dimensions
+    - Each path needs: metrics (0-100), steps, code (philosophy quote)
 
-    Format: Return ONLY valid JSON.
+    Return ONLY valid JSON.
   `;
 
   const schema = {
-    type: Type.OBJECT,
+    type: "OBJECT",
     properties: {
       debate: {
-        type: Type.ARRAY,
+        type: "ARRAY",
         items: {
-          type: Type.OBJECT,
+          type: "OBJECT",
           properties: {
-            agentId: { type: Type.STRING },
-            content: { type: Type.STRING }
+            agentId: { type: "STRING" },
+            content: { type: "STRING" },
+            citation: { type: "STRING", description: "Source reference, e.g. 'The Art of War, Ch.3: Attack by Stratagem'" }
           },
-          required: ["agentId", "content"]
+          required: ["agentId", "content", "citation"]
         }
       },
       verdict: {
-        type: Type.OBJECT,
+        type: "OBJECT",
         properties: {
-          diagnosis: { type: Type.STRING },
-          conflictResolution: { type: Type.STRING },
-          isDarkVerdict: { type: Type.BOOLEAN },
+          diagnosis: { type: "STRING" },
+          executiveSummary: { type: "STRING", description: "One-sentence core insight, under 50 characters" },
+          confidenceLevel: { type: "STRING", enum: ["LOW", "MEDIUM", "HIGH"] },
+          conflictResolution: { type: "STRING" },
+          isDarkVerdict: { type: "BOOLEAN" },
           matrix: {
-            type: Type.ARRAY,
+            type: "ARRAY",
             items: {
-                type: Type.OBJECT,
-                properties: {
-                    dimension: { type: Type.STRING, description: "The criteria of comparison, e.g. 'Risk Attitude'" },
-                    aggressive: { type: Type.STRING, description: "Stance of the Aggressive Path" },
-                    conservative: { type: Type.STRING, description: "Stance of the Conservative Path" },
-                    lateral: { type: Type.STRING, description: "Stance of the Lateral Path" }
-                },
-                required: ["dimension", "aggressive", "conservative", "lateral"]
-            },
-            description: "A structured table comparing the 3 paths across 4 key dimensions."
+              type: "OBJECT",
+              properties: {
+                dimension: { type: "STRING" },
+                aggressive: { type: "STRING" },
+                conservative: { type: "STRING" },
+                lateral: { type: "STRING" }
+              },
+              required: ["dimension", "aggressive", "conservative", "lateral"]
+            }
           },
           paths: {
-            type: Type.ARRAY,
+            type: "ARRAY",
             items: {
-              type: Type.OBJECT,
+              type: "OBJECT",
               properties: {
-                id: { type: Type.STRING, enum: ["aggressive", "conservative", "lateral"] },
-                title: { type: Type.STRING },
-                leadAgentId: { type: Type.STRING },
-                description: { type: Type.STRING },
-                riskLevel: { type: Type.STRING, enum: ["EXTREME", "MODERATE", "LOW"] },
-                upside: { type: Type.STRING },
+                id: { type: "STRING", enum: ["aggressive", "conservative", "lateral"] },
+                title: { type: "STRING" },
+                leadAgentId: { type: "STRING" },
+                description: { type: "STRING" },
+                riskLevel: { type: "STRING", enum: ["EXTREME", "MODERATE", "LOW"] },
+                upside: { type: "STRING" },
                 metrics: {
-                   type: Type.OBJECT,
-                   properties: {
-                     innovation: { type: Type.NUMBER },
-                     risk: { type: Type.NUMBER },
-                     speed: { type: Type.NUMBER },
-                     capital: { type: Type.NUMBER },
-                     resilience: { type: Type.NUMBER }
-                   },
-                   required: ["innovation", "risk", "speed", "capital", "resilience"]
+                  type: "OBJECT",
+                  properties: {
+                    innovation: { type: "NUMBER" },
+                    risk: { type: "NUMBER" },
+                    speed: { type: "NUMBER" },
+                    capital: { type: "NUMBER" },
+                    resilience: { type: "NUMBER" }
+                  },
+                  required: ["innovation", "risk", "speed", "capital", "resilience"]
                 },
-                steps: { 
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING }
-                },
+                steps: { type: "ARRAY", items: { type: "STRING" } },
                 code: {
-                   type: Type.OBJECT,
-                   properties: {
-                     author: { type: Type.STRING },
-                     text: { type: Type.STRING }
-                   },
-                   required: ["author", "text"]
+                  type: "OBJECT",
+                  properties: {
+                    author: { type: "STRING" },
+                    text: { type: "STRING" }
+                  },
+                  required: ["author", "text"]
                 }
               },
               required: ["id", "title", "leadAgentId", "description", "riskLevel", "upside", "metrics", "steps", "code"]
             }
           }
         },
-        required: ["diagnosis", "conflictResolution", "isDarkVerdict", "paths", "matrix"]
+        required: ["diagnosis", "executiveSummary", "confidenceLevel", "conflictResolution", "isDarkVerdict", "paths", "matrix"]
       }
     },
     required: ["debate", "verdict"]
   };
 
-  try {
-    const prompt = previousVerdict 
-      ? `THE USER HAS A FOLLOW-UP QUESTION: "${input}"\n\nINSTRUCTION: Based on your previous verdict, the Council must answer this specifically while refining the strategy. Maintain character voices.` 
-      : `DILEMMA: "${input}"\nCONTEXT: "${context}"\n\nINSTRUCTION: Initiate the Grand Assembly. Let the agents fight over the best approach. Then provide 3 DIVERGENT Strategic Paths and a Comparison Matrix.`;
+  const prompt = previousVerdict
+    ? `FOLLOW-UP: "${input}"\nRefine the strategy. Maintain character voices.`
+    : `DILEMMA: "${input}"\nCONTEXT: "${context}"\nInitiate the Assembly. Let advisors clash. Provide 3 Strategic Paths + Matrix.`;
 
-    const response = await withRetry(async () => {
-      return await ai.models.generateContent({
-        model,
-        contents: prompt,
-        config: {
-          systemInstruction,
-          responseMimeType: "application/json",
-          responseSchema: schema
-        }
-      });
-    });
+  const response = await fetch('/api/council', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ systemInstruction, prompt, schema }),
+  });
 
-    return JSON.parse(response.text || '{}');
-  } catch (error) {
-    console.error("Gemini Error:", error);
-    throw error;
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error((err as any).error || `API error: ${response.status}`);
   }
+
+  return response.json();
 };

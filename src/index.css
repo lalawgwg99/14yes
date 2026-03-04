@@ -310,3 +310,50 @@ h1, h2, h3, .brand-font {
 .path-card-aggressive:hover { border-color: #8B0000 !important; }
 .path-card-conservative:hover { border-color: #003366 !important; }
 .path-card-lateral:hover { border-color: #8C7853 !important; }
+
+/* Print Styles */
+@media print {
+  body {
+    background-image: none !important;
+    background-color: white !important;
+    color: black !important;
+    font-size: 12pt;
+  }
+
+  .print\:hidden,
+  header, footer, nav,
+  button, .editorial-btn,
+  .quantum-loader {
+    display: none !important;
+  }
+
+  .magazine-card {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    break-inside: avoid;
+  }
+
+  .fade-in-up, .stagger-enter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .max-w-4xl, .max-w-5xl, .max-w-3xl {
+    max-width: 100% !important;
+  }
+
+  h2 { font-size: 24pt !important; }
+  h3 { font-size: 16pt !important; }
+
+  .radar-chart-container {
+    break-inside: avoid;
+  }
+
+  @page {
+    margin: 1.5cm;
+    size: A4;
+  }
+}
